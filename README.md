@@ -3,24 +3,32 @@
 This is a standalone version of the GRASS GIS DateTime library, extracted from the main GRASS project.
 It maintains the same structure and functionality as the original GRASS datetime library.
 
+**ğŸ Python wrapper available!** See `python/` directory and `PYTHON_INSTALL.md` for Python bindings.
+
 ## Directory Structure
 
 ```
 datetime_standalone/
-ÃÄÄ CMakeLists.txt          # Root CMake configuration
-ÃÄÄ build.bat               # Windows build script
-ÃÄÄ build.sh                # Linux/Unix build script
-ÃÄÄ README.md               # This file
-ÃÄÄ include/
-³   ÀÄÄ grass/
-³       ÃÄÄ datetime.h      # Main DateTime structure and constants
-³       ÀÄÄ defs/
-³           ÀÄÄ datetime.h  # Function prototypes
-ÀÄÄ lib/
-    ÀÄÄ datetime/
-        ÃÄÄ CMakeLists.txt   # Library CMake configuration
-        ÃÄÄ README           # Original GRASS documentation
-        ÀÄÄ *.c              # All source files
+â”œâ”€â”€ CMakeLists.txt          # Root CMake configuration
+â”œâ”€â”€ build.bat               # Windows build script
+â”œâ”€â”€ build.sh                # Linux/Unix build script
+â”œâ”€â”€ README.md               # This file
+â”œâ”€â”€ PYTHON_INSTALL.md       # Python wrapper installation guide
+â”œâ”€â”€ python/                 # Python wrapper directory
+â”‚   â”œâ”€â”€ grass_datetime.py   # Main Python wrapper
+â”‚   â”œâ”€â”€ setup.py            # Python package setup
+â”‚   â”œâ”€â”€ demo.py             # Quick demo
+â”‚   â””â”€â”€ ...                 # Other Python files
+â”œâ”€â”€ include/
+â”‚   â””â”€â”€ grass/
+â”‚       â”œâ”€â”€ datetime.h      # Main DateTime structure and constants
+â”‚       â””â”€â”€ defs/
+â”‚           â””â”€â”€ datetime.h  # Function prototypes
+â””â”€â”€ lib/
+    â””â”€â”€ datetime/
+        â”œâ”€â”€ CMakeLists.txt   # Library CMake configuration
+        â”œâ”€â”€ README           # Original GRASS documentation
+        â””â”€â”€ *.c              # All source files
 ```
 
 ## Building the Library

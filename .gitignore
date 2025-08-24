@@ -115,3 +115,18 @@ desktop.ini
 *.manifest
 *.res
 *.rc
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python environments
+.conda/
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/

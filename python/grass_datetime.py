@@ -105,10 +105,13 @@ def _load_library():
     """Load the GRASS DateTime shared library."""
     # Try different possible paths - prefer static library on Windows
     possible_paths = [
-        "./build/lib/datetime/Release/grass_datetime.lib",  # Windows MSVC static
+        "../build/lib/datetime/Release/grass_datetime.lib",  # Windows MSVC static (parent dir)
         "grass_datetime.dll",  # Current directory (Windows)
         "./grass_datetime.dll",  # Current directory explicit
+        "../grass_datetime.dll",  # Parent directory
+        "../build/lib/datetime/Release/grass_datetime.dll",  # Windows MSVC build (parent dir)
         "./build/lib/datetime/Release/grass_datetime.dll",  # Windows MSVC build
+        "../build/lib/datetime/Release/grass_datetime.so",   # Linux (parent dir)
         "./build/lib/datetime/Release/grass_datetime.so",   # Linux
         "./build/lib/datetime/libgrass_datetime.so",       # Alternative Linux
         "./build/lib/datetime/libgrass_datetime.dylib",    # macOS
