@@ -15,9 +15,14 @@ set(SOURCES
 add_library(grass_datetime_static STATIC ${SOURCES})
 set_target_properties(grass_datetime_static PROPERTIES OUTPUT_NAME grass_datetime)
 
-# Create shared library
+# Create shared library with proper exports on Windows
 add_library(grass_datetime_shared SHARED ${SOURCES})
 set_target_properties(grass_datetime_shared PROPERTIES OUTPUT_NAME grass_datetime)
+
+# On Windows, export all symbols from the shared library
+if(WIN32)
+    set_target_properties(grass_datetime_shared PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
 
 # Set compiler flags for Release builds only
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
