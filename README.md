@@ -1,6 +1,6 @@
 # GRASS DateTime Library
 
-A standalone C library for date and time operations extracted from GRASS GIS.
+A standalone C library for date and time operations extracted from GRASS GIS, with Python bindings via CFFI.
 
 ## Features
 
@@ -8,6 +8,7 @@ A standalone C library for date and time operations extracted from GRASS GIS.
 - Time zone handling
 - Date arithmetic and comparisons
 - Cross-platform support (Windows, Linux, macOS)
+- **Python bindings via CFFI** for easy integration
 
 ## Building
 
@@ -48,6 +49,62 @@ cl /LD /Iinclude /DGRASS_DATETIME_DLL_EXPORT /Fe:grass_datetime.dll lib\datetime
 cl /Iinclude /Fe:test_datetime.exe test_datetime.c grass_datetime.lib
 test_datetime.exe
 ```
+
+## Python Bindings
+
+The library includes Python bindings built with CFFI for easy integration into Python projects.
+
+### Python Setup
+
+1. **Build the C library first** (see above steps)
+
+2. **Install Python dependencies**:
+   ```bash
+   cd python
+   pip install -r requirements.txt
+   ```
+
+3. **Build the CFFI extension**:
+   ```bash
+   python grass_datetime_build.py
+   ```
+
+4. **Copy the DLL** (Windows):
+   ```bash
+   copy ..\build\Release\grass_datetime.dll .
+   ```
+
+### Python Usage
+
+```python
+import _grass_datetime_cffi as cffi_module
+
+# Access FFI and library
+ffi = cffi_module.ffi
+lib = cffi_module.lib
+
+# Test utility functions
+leap = lib.datetime_is_leap_year(2024, 1) != 0
+days = lib.datetime_days_in_month(2024, 2, 1)
+
+# Work with DateTime structures
+dt = ffi.new("DateTime *")
+lib.datetime_set_type(dt, lib.DATETIME_ABSOLUTE, 
+                     lib.DATETIME_YEAR, lib.DATETIME_SECOND, 0)
+
+# Set values
+lib.datetime_set_year(dt, 2025)
+lib.datetime_set_month(dt, 8)
+lib.datetime_set_day(dt, 25)
+
+# Format
+buffer = ffi.new("char[]", 256)
+if lib.datetime_format(dt, buffer) == 0:
+    formatted = ffi.string(buffer).decode('utf-8')
+    print(f"Formatted: {formatted}")
+```
+
+See `python/README.md` for detailed Python documentation and `python/direct_test.py` for examples.
 
 ## Usage
 
