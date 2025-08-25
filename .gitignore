@@ -116,6 +116,19 @@ desktop.ini
 *.res
 *.rc
 
+# MSVC specific build artifacts
+*.exp
+*.pdb
+*.iobj
+*.ipdb
+*.def
+
+# Test executables
+test_datetime_shared.exe
+test_datetime_static.exe
+grass_datetime.dll
+grass_datetime.lib
+
 # Python cache files
 __pycache__/
 *.py[cod]
