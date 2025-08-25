@@ -104,6 +104,13 @@ if(BUILD_PYTHON_EXTENSION)
             COMMENT "Testing Python CFFI extension"
         )
         
+        add_custom_target(test_python_direct
+            COMMAND ${PYTHON_EXECUTABLE} -B ${CMAKE_CURRENT_SOURCE_DIR}/python/test_direct.py
+            DEPENDS python_extension
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Testing Python CFFI bindings directly"
+        )
+        
         add_custom_target(test_python_simple
             COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/python/simple_examples.py
             DEPENDS python_extension

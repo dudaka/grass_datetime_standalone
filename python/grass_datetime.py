@@ -5,19 +5,54 @@ A Python interface to the GRASS DateTime C library using CFFI.
 """
 
 import os
+import sys
 from typing import Optional, Tuple, Union
 
-# Add DLL directory before importing CFFI module
-_dll_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'build', 'Release'))
-if os.path.exists(_dll_directory):
-    os.add_dll_directory(_dll_directory)
+def load_cffi_module():
+    """Load the CFFI module with proper DLL and module path handling"""
+    
+    # Add current directory to path for importing the extension
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+    
+    # Try different locations for the CFFI module
+    possible_paths = [
+        '.',  # Current directory (when run from build dir)
+        current_dir,  # Python source directory
+        os.path.join(parent_dir, 'build'),  # Build directory
+    ]
+    
+    for path in possible_paths:
+        if path not in sys.path:
+            sys.path.insert(0, path)
+    
+    # Add DLL directory for Windows
+    if os.name == 'nt':
+        dll_paths = [
+            '.',  # Current directory
+            os.path.join('.', 'Release'),  # Release subdirectory
+            os.path.join('.', 'Debug'),    # Debug subdirectory
+            current_dir,  # Python directory
+            os.path.join(parent_dir, 'build'),  # Build directory
+            os.path.join(parent_dir, 'build', 'Release'),  # Build/Release
+            os.path.join(parent_dir, 'build', 'Debug'),    # Build/Debug
+        ]
+        
+        for dll_path in dll_paths:
+            if os.path.isdir(dll_path):
+                try:
+                    os.add_dll_directory(os.path.abspath(dll_path))
+                except (OSError, AttributeError):
+                    pass  # Ignore if directory doesn't exist or method not available
+    
+    try:
+        import _grass_datetime_cffi as _cffi_module
+        return _cffi_module.ffi, _cffi_module.lib
+    except ImportError as e:
+        raise ImportError(f"Failed to import CFFI module. Make sure the C library is built and the DLL is available. Error: {e}") from e
 
-try:
-    import _grass_datetime_cffi as _cffi_module
-    ffi = _cffi_module.ffi
-    lib = _cffi_module.lib
-except ImportError as e:
-    raise ImportError(f"Failed to import CFFI module. Make sure the C library is built and the DLL is available. Error: {e}") from e
+# Load the CFFI module
+ffi, lib = load_cffi_module()
 
 class DateTimeError(Exception):
     """Exception raised for DateTime library errors."""
@@ -274,6 +309,12 @@ class DateTime:
         except DateTimeError:
             return f"DateTime(unformatted)"
     
+    def copy(self) -> 'DateTime':
+        """Create a copy of this DateTime."""
+        new_dt = DateTime()
+        lib.datetime_copy(new_dt._dt, self._dt)
+        return new_dt
+    
     def __repr__(self) -> str:
         """Representation of the DateTime."""
         try:
@@ -304,3 +345,47 @@ DAY = DateTime.DAY
 HOUR = DateTime.HOUR
 MINUTE = DateTime.MINUTE
 SECOND = DateTime.SECOND
+
+def main():
+    """Main function for testing the GRASS DateTime wrapper when run as a script."""
+    print("GRASS DateTime Python Wrapper Test")
+    print("=" * 50)
+    
+    # Test utility functions
+    print("\nUtility Functions:")
+    print(f"- 2024 is leap year: {is_leap_year(2024)}")
+    print(f"- 2025 is leap year: {is_leap_year(2025)}")
+    print(f"- Days in Feb 2024: {days_in_month(2024, 2)}")
+    print(f"- Days in Feb 2025: {days_in_month(2025, 2)}")
+    print(f"- Days in 2024: {days_in_year(2024)}")
+    
+    # Test DateTime class
+    print("\nDateTime Class:")
+    try:
+        dt = DateTime()
+        dt.set_type(ABSOLUTE, YEAR, SECOND, 0)
+        dt.year = 2025
+        dt.month = 8
+        dt.day = 25
+        dt.hour = 14
+        dt.minute = 30
+        dt.second = 45.5
+        
+        print(f"- Created DateTime: {dt}")
+        print(f"- Year: {dt.year}, Month: {dt.month}, Day: {dt.day}")
+        print(f"- Time: {dt.hour:02d}:{dt.minute:02d}:{dt.second:04.1f}")
+        
+        # Test copy
+        dt2 = dt.copy()
+        print(f"- Copied DateTime: {dt2}")
+        
+        print("\nSUCCESS: High-level wrapper test completed successfully!")
+        
+    except Exception as e:
+        print(f"ERROR: Error during testing: {e}")
+        return 1
+    
+    return 0
+
+if __name__ == "__main__":
+    exit(main())

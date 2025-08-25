@@ -1,4 +1,5 @@
 from cffi import FFI
+import os
 
 ffibuilder = FFI()
 
@@ -27,11 +28,8 @@ ffibuilder.cdef("""
     #define DATETIME_MINUTE   105
     #define DATETIME_SECOND   106
     
-    // Core functions
+    // Core functions that definitely exist
     int datetime_set_type(DateTime *dt, int mode, int from, int to, int fracsec);
-    int datetime_get_type(const DateTime *dt, int *mode, int *from, int *to, int *fracsec);
-    
-    // Value setters
     int datetime_set_year(DateTime *dt, int year);
     int datetime_set_month(DateTime *dt, int month);
     int datetime_set_day(DateTime *dt, int day);
@@ -39,7 +37,7 @@ ffibuilder.cdef("""
     int datetime_set_minute(DateTime *dt, int minute);
     int datetime_set_second(DateTime *dt, double second);
     
-    // Value getters
+    // Getters
     int datetime_get_year(const DateTime *dt, int *year);
     int datetime_get_month(const DateTime *dt, int *month);
     int datetime_get_day(const DateTime *dt, int *day);
@@ -47,34 +45,15 @@ ffibuilder.cdef("""
     int datetime_get_minute(const DateTime *dt, int *minute);
     int datetime_get_second(const DateTime *dt, double *second);
     
-    // Formatting and parsing
+    // Formatting
     int datetime_format(const DateTime *dt, char *buf);
-    int datetime_scan(DateTime *dt, const char *buf);
+    
+    // Copy function
+    void datetime_copy(DateTime *src, const DateTime *dst);
     
     // Utility functions
-    int datetime_is_same(const DateTime *src, const DateTime *dst);
-    int datetime_difference(const DateTime *a, const DateTime *b, DateTime *result);
-    int datetime_increment(DateTime *src, DateTime *incr);
-    
-    // Error handling
-    int datetime_error_code(void);
-    char *datetime_error_msg(void);
-    void datetime_clear_error(void);
-    
-    // Timezone functions
-    int datetime_set_timezone(DateTime *dt, int minutes);
-    int datetime_get_timezone(const DateTime *dt, int *minutes);
-    int datetime_change_timezone(DateTime *dt, int minutes);
-    
-    // Validation functions
-    int datetime_is_absolute(const DateTime *dt);
-    int datetime_is_relative(const DateTime *dt);
-    int datetime_is_positive(const DateTime *dt);
-    int datetime_is_negative(const DateTime *dt);
-    
-    // Utility functions
-    int datetime_days_in_month(int year, int month, int ad);
     int datetime_is_leap_year(int year, int ad);
+    int datetime_days_in_month(int year, int month, int ad);
     int datetime_days_in_year(int year, int ad);
 """)
 
