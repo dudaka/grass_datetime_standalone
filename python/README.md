@@ -200,6 +200,171 @@ python ../python/grass_datetime.py   # High-level wrapper test
 cmake --build . --config Release --target test_python_direct
 ```
 
+## Automatic CFFI cdef() Generation
+
+The CFFI build process requires a `cdef()` string that declares all C types, constants, and functions. Instead of writing this manually, several approaches can automatically generate this from C header files.
+
+### Current Implementation (Hybrid Auto/Manual)
+
+Our `grass_datetime_build.py` uses a smart hybrid approach:
+
+```python
+def auto_generate_cdef():
+    """Automatically extract cdef from header file with manual fallback"""
+    header_file = '../include/grass/datetime.h'
+    
+    # 1. Extract DateTime struct using regex
+    struct_pattern = r'typedef\s+struct[^{]*\{([^}]+)\}\s*DateTime\s*;'
+    
+    # 2. Extract DATETIME_* constants
+    const_pattern = r'#define\s+(DATETIME_\w+)\s+(\d+)'
+    
+    # 3. Fall back to manual definitions if extraction fails
+    if not cdef_parts or no_functions:
+        return get_manual_cdef()
+```
+
+**✅ Pros:** Simple, reliable, no dependencies, automatic fallback  
+**❌ Cons:** May miss complex declarations
+
+### Alternative Approaches
+
+#### 1. Simple Regex Parser
+```python
+def parse_header_with_regex(header_path):
+    with open(header_path, 'r') as f:
+        content = f.read()
+    
+    # Remove comments
+    content = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
+    content = re.sub(r'//.*', '', content)
+    
+    # Extract structs
+    structs = re.findall(r'typedef\s+struct[^{]*\{[^}]+\}\s*\w+\s*;', content, re.DOTALL)
+    
+    # Extract constants
+    constants = re.findall(r'#define\s+[A-Z_][A-Z0-9_]*\s+\d+', content)
+    
+    # Extract functions
+    functions = re.findall(r'^\s*\w+\s+\w+\s*\([^)]*\)\s*;', content, re.MULTILINE)
+    
+    return combine_declarations(structs, constants, functions)
+```
+
+#### 2. GCC/Clang Preprocessing
+```python
+def preprocess_with_gcc(header_path):
+    """Use GCC to handle all preprocessor directives"""
+    cmd = ['gcc', '-E', '-I../include', header_path]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    
+    # Filter output to keep only our declarations
+    return filter_preprocessed_output(result.stdout)
+```
+
+**✅ Pros:** Handles all preprocessor directives correctly  
+**❌ Cons:** Requires GCC/Clang installed
+
+#### 3. Pure Python C Preprocessor (pcpp)
+```bash
+pip install pcpp
+```
+
+```python
+from pcpp import Preprocessor
+
+def preprocess_with_pcpp(header_path):
+    """Most accurate preprocessing in pure Python"""
+    cpp = Preprocessor()
+    cpp.add_path('../include')
+    
+    with open(header_path, 'r') as f:
+        cpp.parse(f.read(), header_path)
+    
+    output = []
+    cpp.write(output)
+    return ''.join(output)
+```
+
+**✅ Pros:** Pure Python, very accurate, handles complex headers  
+**❌ Cons:** Extra dependency
+
+#### 4. PyCParser (Full C Parsing)
+```bash
+pip install pycparser
+```
+
+```python
+from pycparser import parse_file, c_generator
+
+def parse_with_pycparser(header_path):
+    """Complete C parsing with AST"""
+    ast = parse_file(header_path, use_cpp=True, 
+                    cpp_args=['-I../include'])
+    
+    generator = c_generator.CGenerator()
+    return generator.visit(ast)
+```
+
+**✅ Pros:** Full C parsing, most robust, handles all C constructs  
+**❌ Cons:** Complex, requires proper C preprocessing, large dependency
+
+#### 5. Configuration-Driven Generation
+Create `cffi_config.ini`:
+```ini
+[structures]
+DateTime = auto
+
+[constants]
+patterns = ["DATETIME_*"]
+
+[functions]  
+patterns = ["datetime_*"]
+```
+
+```python
+def generate_from_config(config_file):
+    """Use configuration file to control extraction"""
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    
+    # Extract based on patterns and rules
+    return extract_declarations_from_config(config)
+```
+
+**✅ Pros:** Very flexible, maintainable, version-controllable  
+**❌ Cons:** More setup required
+
+### Choosing the Right Approach
+
+| Approach | Complexity | Dependencies | Accuracy | Best For |
+|----------|------------|--------------|----------|----------|
+| **Hybrid Auto/Manual** | Low | None | Good | Small/medium projects |
+| **Regex Parser** | Low | None | Medium | Simple headers |
+| **GCC Preprocessing** | Medium | GCC/Clang | High | Complex headers |
+| **PCPP** | Medium | pcpp | High | Pure Python needed |
+| **PyCParser** | High | pycparser | Highest | Complex C codebases |
+| **Configuration** | Medium | None | High | Large projects |
+
+### Implementation Examples
+
+See these files for complete implementations:
+- `grass_datetime_build.py` - Current hybrid approach
+- `grass_datetime_build_v2.py` - Enhanced version with better extraction
+- `generate_cdef.py` - Advanced regex-based parser
+- `cdef_generation_methods.py` - Multiple method examples
+- `config_cdef_generator.py` - Configuration-driven approach
+
+### Recommendation
+
+For most projects like GRASS DateTime:
+1. **Start with hybrid auto/manual** (current approach)
+2. **Add pcpp** if headers become complex: `pip install pcpp`
+3. **Use configuration-driven** for large projects with many headers
+4. **Consider pycparser** only for very complex C codebases
+
+The key is having a reliable manual fallback for when automatic extraction fails.
+
 ## Troubleshooting
 
 ### Import Errors
