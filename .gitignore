@@ -143,3 +143,11 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Python CFFI build artifacts
+python/*.dll
+python/*.pyd
+python/_*.c
+python/build/
+python/dist/
+python/*.egg-info/
