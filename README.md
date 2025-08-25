@@ -1,152 +1,104 @@
 # GRASS DateTime Library
 
-A standalone C library for date and time operations extracted from GRASS GIS, with Python bindings via CFFI.
+A standalone C library for date and time operations extracted from GRASS GIS, with Python bindings.
 
 ## Features
 
 - Date and time parsing and formatting
-- Time zone handling
+- Time zone handling  
 - Date arithmetic and comparisons
 - Cross-platform support (Windows, Linux, macOS)
-- **Python bindings via CFFI** for easy integration
+- **Python bindings** for easy integration
 
-## Building
+## Quick Start
 
-### Prerequisites
+### C Library
 
-- CMake 3.10 or higher
-- A C compiler (MSVC on Windows, GCC/Clang on Unix-like systems)
+1. **Build**:
 
-### Build Steps
-
-1. Create a build directory:
    ```bash
-   mkdir build
-   cd build
-   ```
-
-2. Configure the project:
-   ```bash
+   mkdir build && cd build
    cmake ..
-   ```
-
-3. Build the library:
-   ```bash
    cmake --build . --config Release
    ```
 
-4. Run tests:
+2. **Test**:
+
    ```bash
    ctest -C Release
    ```
 
-### Manual Build (Windows with MSVC)
+### Python Bindings
 
-If you prefer to build manually on Windows:
+1. **Build the C library first** (see above)
 
-```cmd
-cl /LD /Iinclude /DGRASS_DATETIME_DLL_EXPORT /Fe:grass_datetime.dll lib\datetime\*.c
-cl /Iinclude /Fe:test_datetime.exe test_datetime.c grass_datetime.lib
-test_datetime.exe
-```
+2. **Build Python extension**:
 
-## Python Bindings
-
-The library includes Python bindings built with CFFI for easy integration into Python projects.
-
-### Python Setup
-
-1. **Build the C library first** (see above steps)
-
-2. **Install Python dependencies**:
    ```bash
    cd python
-   pip install -r requirements.txt
-   ```
-
-3. **Build the CFFI extension**:
-   ```bash
    python grass_datetime_build.py
    ```
 
-4. **Copy the DLL** (Windows):
-   ```bash
-   copy ..\build\Release\grass_datetime.dll .
+3. **Use it**:
+
+   ```python
+   from grass_datetime import DateTime, ABSOLUTE, YEAR, SECOND
+   
+   # Create datetime
+   dt = DateTime(ABSOLUTE, YEAR, SECOND, 0)
+   dt.year = 2025
+   dt.month = 8
+   dt.day = 25
+   
+   print(dt)  # Output: 25 Aug 2025 00:00:00
    ```
 
-### Python Usage
+## Examples
 
-```python
-import _grass_datetime_cffi as cffi_module
-
-# Access FFI and library
-ffi = cffi_module.ffi
-lib = cffi_module.lib
-
-# Test utility functions
-leap = lib.datetime_is_leap_year(2024, 1) != 0
-days = lib.datetime_days_in_month(2024, 2, 1)
-
-# Work with DateTime structures
-dt = ffi.new("DateTime *")
-lib.datetime_set_type(dt, lib.DATETIME_ABSOLUTE, 
-                     lib.DATETIME_YEAR, lib.DATETIME_SECOND, 0)
-
-# Set values
-lib.datetime_set_year(dt, 2025)
-lib.datetime_set_month(dt, 8)
-lib.datetime_set_day(dt, 25)
-
-# Format
-buffer = ffi.new("char[]", 256)
-if lib.datetime_format(dt, buffer) == 0:
-    formatted = ffi.string(buffer).decode('utf-8')
-    print(f"Formatted: {formatted}")
-```
-
-See `python/README.md` for detailed Python documentation and `python/direct_test.py` for examples.
-
-## Usage
-
-Include the header files and link against the shared library:
+### C Usage
 
 ```c
 #include <grass/datetime.h>
 
-int main() {
-    DateTime dt;
-    
-    // Initialize datetime structure
-    datetime_set_type(&dt, DATETIME_ABSOLUTE, DATETIME_YEAR, DATETIME_SECOND, 0);
-    
-    // Set date and time
-    datetime_set_year(&dt, 2025);
-    datetime_set_month(&dt, 8);
-    datetime_set_day(&dt, 24);
-    
-    // Format and display
-    char buffer[100];
-    if (datetime_format(&dt, buffer) == 0) {
-        printf("DateTime: %s\n", buffer);
-    }
-    
-    return 0;
-}
+DateTime dt;
+datetime_set_type(&dt, DATETIME_ABSOLUTE, DATETIME_YEAR, DATETIME_SECOND, 0);
+datetime_set_year(&dt, 2025);
+datetime_set_month(&dt, 8);
+datetime_set_day(&dt, 25);
+
+char buffer[100];
+datetime_format(&dt, buffer);
+printf("Date: %s\n", buffer);
 ```
 
-## API Reference
+### Python Usage
 
-The library provides functions for:
+```python
+from grass_datetime import DateTime, is_leap_year, days_in_month
 
-- **Type management**: `datetime_set_type()`, `datetime_get_type()`
-- **Value setting**: `datetime_set_year()`, `datetime_set_month()`, etc.
-- **Value getting**: `datetime_get_year()`, `datetime_get_month()`, etc.
-- **Formatting**: `datetime_format()`
-- **Parsing**: `datetime_scan()`
-- **Arithmetic**: `datetime_increment()`, `datetime_difference()`
-- **Comparisons**: `datetime_is_same()`, `datetime_is_between()`
-- **Time zones**: `datetime_set_timezone()`, `datetime_change_timezone()`
+# Create and use datetime
+dt = DateTime()
+dt.year = 2025
+dt.month = 2
+dt.day = 14
 
-## License
+print(f"Date: {dt}")
+print(f"Is 2024 leap year: {is_leap_year(2024)}")
+print(f"Days in Feb 2024: {days_in_month(2024, 2)}")
+```
 
-This code is derived from GRASS GIS and maintains the same licensing terms.
+## File Structure
+
+```text
+├── include/grass/          # Header files
+├── lib/datetime/          # C source files
+├── python/               # Python bindings
+├── test_datetime.c       # C test file
+└── CMakeLists.txt       # Build configuration
+```
+
+## Documentation
+
+- **C API**: See header files in `include/grass/`
+- **Python API**: Run `python python/high_level_demo.py` for examples
+- **Build Details**: See `python/README.md` for Python-specific info

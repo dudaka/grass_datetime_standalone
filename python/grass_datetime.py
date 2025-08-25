@@ -6,7 +6,18 @@ A Python interface to the GRASS DateTime C library using CFFI.
 
 import os
 from typing import Optional, Tuple, Union
-from ._grass_datetime_cffi import ffi, lib
+
+# Add DLL directory before importing CFFI module
+_dll_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'build', 'Release'))
+if os.path.exists(_dll_directory):
+    os.add_dll_directory(_dll_directory)
+
+try:
+    import _grass_datetime_cffi as _cffi_module
+    ffi = _cffi_module.ffi
+    lib = _cffi_module.lib
+except ImportError as e:
+    raise ImportError(f"Failed to import CFFI module. Make sure the C library is built and the DLL is available. Error: {e}") from e
 
 class DateTimeError(Exception):
     """Exception raised for DateTime library errors."""
